@@ -21,25 +21,22 @@ class FigureManagerICat(FigureManagerBase):
         icat = ['kitty', '+kitten', 'icat']
 
         # gather terminal dimensions
-        cols = int(tput(['cols']))
         rows = int(tput(['lines']))
         px = run_with_output(icat)(['--print-window-size'])
         px = list(map(int, px.split('x')))
 
         # account for post-display prompt scrolling
-        px[1] -= int(1*(px[1]/rows))
-        rows = int(tput(['lines'])) - 1
+        # 3 line shift for [\n, <matplotlib.axes…, >>>] after the figure
+        px[1] -= int(3*(px[1]/rows))
 
-        # resize figure to terminal size
+        # resize figure to terminal size & aspect ratio
         dpi = self.canvas.figure.dpi
-        self.canvas.figure.set_size_inches(tuple(map(lambda x: (x / dpi), px)))
+        self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
 
         with BytesIO() as buf:
-            self.canvas.figure.savefig(buf, format='png',
-                                       facecolor='#ffffff7f', transparent=True)
+            self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
 
-            run(icat + ['--clear', '--place', f'{cols}x{rows}@0x0'],
-                input=buf.getbuffer())
+            run(icat + ['--align', 'left'], input=buf.getbuffer())
 
 
 @_Backend.export
