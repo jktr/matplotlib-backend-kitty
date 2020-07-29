@@ -18,20 +18,25 @@ if sys.flags.interactive:
 
 
 class FigureManagerICat(FigureManagerBase):
-    def show(self):
 
-        def run_with_output(cmd):
-            def f(args, **kwargs):
-                r = run(cmd + args, **kwargs, capture_output=True, text=True)
+    @classmethod
+    def _run(self, *cmd):
+        def f(*args, output=True, **kwargs):
+            if output:
+                kwargs['capture_output'] = True
+                kwargs['text'] = True
+            r = run(cmd + args, **kwargs)
+            if output:
                 return r.stdout.rstrip()
-            return f
+        return f
 
-        tput = run_with_output(['tput'])
-        icat = ['kitty', '+kitten', 'icat']
+    def show(self):
+        tput = __class__._run('tput')
+        icat = __class__._run('kitty', '+kitten', 'icat')
 
         # gather terminal dimensions
-        rows = int(tput(['lines']))
-        px = run_with_output(icat)(['--print-window-size'])
+        rows = int(tput('lines'))
+        px = icat('--print-window-size')
         px = list(map(int, px.split('x')))
 
         # account for post-display prompt scrolling
@@ -44,9 +49,7 @@ class FigureManagerICat(FigureManagerBase):
 
         with BytesIO() as buf:
             self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
-
-            run(icat + ['--align', 'left'], input=buf.getbuffer())
-
+            icat('--align', 'left', output=False, input=buf.getbuffer())
 
 @_Backend.export
 class _BackendICatAgg(_Backend):
