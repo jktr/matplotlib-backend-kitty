@@ -4,9 +4,18 @@ from matplotlib._pylab_helpers import Gcf
 from matplotlib.backend_bases import (
     _Backend, FigureCanvasBase, FigureManagerBase)
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib import interactive
 
 from io import BytesIO
 from subprocess import run
+
+import sys
+
+
+# XXX heuristic for interactive repl
+if sys.flags.interactive:
+    interactive(True)
+
 
 class FigureManagerICat(FigureManagerBase):
     def show(self):
