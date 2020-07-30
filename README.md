@@ -14,12 +14,31 @@ matplotlib.use('module://matplotlib-backend-kitty')
 import matplotlib.pyplot as plt
 ```
 
-You can then test it from kitty with something like
-`>>> import pandas; pandas.Series(range(10)).plot()`.
+```
+$ python -i
+>>> n = 10000
+>>> df = pd.DataFrame({'x': np.random.randn(n),
+                       'y': np.random.randn(n)})
+>>> df.plot.hexbin(x='x', y='y', gridsize=20)
+<plot is shown>
+```
 
-It's based on the way that the IPython Matplatlib
-output works: it's a hybrid of both image and GUI backends,
-piping the Agg Backend's output to kitty's `icat` kitten.
-This means that both `DataFrame.plot()` and `plt.show()`
-will work as expected, but that the image drawn on your
-terminal isn't interactive, and animations aren't supported.
+If you set your matplotlib to interactive mode via
+`matplotlib.pyplot.ion()` or by running python as
+`python -i`, non-empty figures are drawn on construction
+where possible. This allows you to use pandas' `plot()`
+calls directly, without calling `plt.show()`, and still
+enables you to manually construct and `plt.show()`.
+
+If your matplotlib is in non-interactive mode,
+you can construct your figures as usual, and then call
+`plt.show()` to render them to your terminal. This
+works from both a repl and when running scripts.
+
+Internally, this backend is somewhat based on matplotlib's
+IPython support: it's a hybrid of image and GUI backend types.
+It works by using matplotlib's `Agg` backend to render the
+plot, and then calls kitty's `icat` to place the rendered
+image on your terminal. This means that plotting works as
+expected, but the image drawn to your terminal isn't
+interactive and animations aren't supported.

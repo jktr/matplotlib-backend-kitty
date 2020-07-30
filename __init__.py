@@ -56,14 +56,20 @@ class _BackendICatAgg(_Backend):
     FigureCanvas = FigureCanvasAgg
     FigureManager = FigureManagerICat
 
-    def _icat_draw():
-        manager = Gcf.get_active()
-        if manager:
+    # XXX: `trigger_manager_draw` is intended
+    # for updates, not one-shot rendering.
+    # Thus, we need to filter calls for figures
+    # that aren't fully initialized yet, like the
+    # call from `plt.figure`. Our heuristic for
+    # an initialized figure is the presence of axes.
+    def _trigger_manager_draw(manager):
+        if manager.canvas.figure.get_axes():
             manager.show()
-        Gcf.destroy_all()
-
-    def draw_if_interactive(*args, **kwargs):
-        __class__._icat_draw()
+            Gcf.destroy(manager)
 
     def show(*args, **kwargs):
-        __class__._icat_draw()
+        _Backend.show(*args, **kwargs)
+        Gcf.destroy_all()
+
+    trigger_manager_draw = _trigger_manager_draw
+    mainloop = lambda: None
