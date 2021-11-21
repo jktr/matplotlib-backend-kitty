@@ -54,24 +54,27 @@ class FigureManagerICat(FigureManagerBase):
 
 @_Backend.export
 class _BackendICatAgg(_Backend):
+
     FigureCanvas = FigureCanvasAgg
     FigureManager = FigureManagerICat
 
-    # XXX: `trigger_manager_draw` is intended
-    # for updates, not one-shot rendering.
-    # Thus, we need to filter calls for figures
-    # that aren't fully initialized yet, like the
-    # call from `plt.figure`. Our heuristic for
-    # an initialized figure is the presence of axes.
-    def _trigger_manager_draw(manager):
-        if manager.canvas.figure.get_axes():
-            manager.show()
-            Gcf.destroy(manager)
+    # Noop function instead of None signals that
+    # this is an "interactive" backend
+    mainloop = lambda: None
+
+    # XXX: `draw_if_interactive` isn't really intended for
+    # on-shot rendering. We run the risk of being called
+    # on a figure that isn't completely rendered yet, so
+    # we skip draw calls for figures that we detect as
+    # not being fully initialized yet. Our heuristic for
+    # that is the presence of axes on the figure.
+    @classmethod
+    def draw_if_interactive(cls):
+        manager = Gcf.get_active()
+        if is_interactive() and manager.canvas.figure.get_axes():
+            cls.show()
 
     @classmethod
     def show(cls, *args, **kwargs):
         _Backend.show(*args, **kwargs)
         Gcf.destroy_all()
-
-    trigger_manager_draw = _trigger_manager_draw
-    mainloop = lambda: None
