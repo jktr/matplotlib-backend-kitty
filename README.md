@@ -9,7 +9,8 @@ To use it, add the directory containing this module to your
 `sys.path` or the `$PYTHONPATH`, or clone this repo into
 your python's `site-packages` directory.
 
-Then, initialize matplotlib like this:
+Then, initialize matplotlib either as follows or using the
+the `MPLBACKEND` environment variable:
 
 ```python
 import matplotlib
@@ -37,6 +38,10 @@ If your matplotlib is in non-interactive mode,
 you can construct your figures as usual, and then call
 `plt.show()` to render them to your terminal. This
 works from both a repl and when running scripts.
+
+Figures are resized to the size of your terminal by default.
+If you'd rather control the sizing of figures manually,
+set the `MPLBACKEND_KITTY_SIZING` environment variable to `manual`.
 
 Internally, this backend is somewhat based on matplotlib's
 IPython support: it's a hybrid of image and GUI backend types.
