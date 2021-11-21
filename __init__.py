@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: CC0-1.0
 
-from matplotlib._pylab_helpers import Gcf
-from matplotlib.backend_bases import (
-    _Backend, FigureCanvasBase, FigureManagerBase)
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib import interactive
+import os
+import sys
 
 from io import BytesIO
 from subprocess import run
 
-import sys
+from matplotlib import interactive, is_interactive
+from matplotlib._pylab_helpers import Gcf
+from matplotlib.backend_bases import (_Backend, FigureManagerBase)
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 # XXX heuristic for interactive repl
@@ -20,7 +20,7 @@ if sys.flags.interactive:
 class FigureManagerICat(FigureManagerBase):
 
     @classmethod
-    def _run(self, *cmd):
+    def _run(cls, *cmd):
         def f(*args, output=True, **kwargs):
             if output:
                 kwargs['capture_output'] = True
@@ -51,6 +51,7 @@ class FigureManagerICat(FigureManagerBase):
             self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
             icat('--align', 'left', output=False, input=buf.getbuffer())
 
+
 @_Backend.export
 class _BackendICatAgg(_Backend):
     FigureCanvas = FigureCanvasAgg
@@ -67,7 +68,8 @@ class _BackendICatAgg(_Backend):
             manager.show()
             Gcf.destroy(manager)
 
-    def show(*args, **kwargs):
+    @classmethod
+    def show(cls, *args, **kwargs):
         _Backend.show(*args, **kwargs)
         Gcf.destroy_all()
 
