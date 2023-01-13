@@ -56,10 +56,14 @@ class FigureManagerICat(FigureManagerBase):
             icat('--align', 'left', output=False, input=buf.getbuffer())
 
 
+class FigureCanvasICat(FigureCanvasAgg):
+    manager_class = FigureManagerICat
+
+
 @_Backend.export
 class _BackendICatAgg(_Backend):
 
-    FigureCanvas = FigureCanvasAgg
+    FigureCanvas = FigureCanvasICat
     FigureManager = FigureManagerICat
 
     # Noop function instead of None signals that
