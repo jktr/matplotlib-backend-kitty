@@ -1,6 +1,6 @@
 [project]
 name = "matplotlib-backend-kitty"
-version = "2.1.1"
+version = "2.1.2"
 description = "show matplotlib plots directly in your kitty terminal"
 readme = "README.md"
 classifiers = [
