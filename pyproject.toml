@@ -1,3 +1,23 @@
+[project]
+name = "matplotlib-backend-kitty"
+version = "2.1.1"
+description = "show matplotlib plots directly in your kitty terminal"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "Framework :: Matplotlib",
+    "Topic :: Terminals",
+]
+dependencies = [ "matplotlib" ]
+
+[project.urls]
+"Homepage" = "https://github.com/jktr/matplotlib-backend-kitty"
+"Bug Tracker" = "https://github.com/jktr/matplotlib-backend-kitty/issues"
+
 [build-system]
-requires = [ "setuptools", "wheel" ]
+requires = [ "setuptools>=61.0" ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = [ "." ]
