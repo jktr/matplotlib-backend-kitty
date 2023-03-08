@@ -32,7 +32,7 @@ class FigureManagerICat(FigureManagerBase):
 
     def show(self):
 
-        icat = __class__._run('kitty', '+kitten', 'icat')
+        icat = __class__._run('kitty', 'icat')
 
         if os.environ.get('MPLBACKEND_KITTY_SIZING', 'automatic') != 'manual':
 
