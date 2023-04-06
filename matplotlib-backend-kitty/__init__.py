@@ -52,7 +52,7 @@ class FigureManagerICat(FigureManagerBase):
             self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
 
         with BytesIO() as buf:
-            self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
+            self.canvas.figure.savefig(buf, format='png')
             icat('--align', 'left', output=False, input=buf.getbuffer())
 
 
