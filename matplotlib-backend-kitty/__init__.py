@@ -1,9 +1,16 @@
 # SPDX-License-Identifier: CC0-1.0
 
+import array
+import fcntl
 import os
+import re
 import sys
 
 from io import BytesIO
+import termios
+import tty
+from base64 import standard_b64encode
+from contextlib import suppress
 from subprocess import run
 
 from matplotlib import interactive, is_interactive
@@ -16,6 +23,68 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 if hasattr(sys, 'ps1') or sys.flags.interactive:
     interactive(True)
 
+def term_size_px():
+    width_px = height_px = 0
+
+    # try to get terminal size from ioctl
+    with suppress(OSError):
+        buf = array.array('H', [0, 0, 0, 0])
+        fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
+        _, _, width_px, height_px = buf
+
+    if width_px != 0 and height_px != 0:
+        return height_px, width_px
+
+    # fallback to ANSI escape code if ioctl fails
+    buf = ''
+    stdin = sys.stdin.fileno()
+    tattr = termios.tcgetattr(stdin)
+
+    try:
+        tty.setcbreak(stdin, termios.TCSANOW)
+        sys.stdout.write('\x1b[14t')
+        sys.stdout.flush()
+
+        while True:
+            buf += sys.stdin.read(1)
+            if buf[-1] == 't':
+                break
+
+    finally:
+        termios.tcsetattr(stdin, termios.TCSANOW, tattr)
+
+    # reading the actual values, but what if a keystroke appears while reading
+    # from stdin? As dirty work around, getpos() returns if this fails: None
+    try:
+        matches = re.match(r'^\x1b\[4;(\d*);(\d*)t', buf)
+        groups = matches.groups()
+    except AttributeError:
+        return None
+
+    return (int(groups[0]), int(groups[1]))
+
+
+def serialize_gr_command(**cmd):
+    payload = cmd.pop('payload', None)
+    cmd = ','.join(f'{k}={v}' for k, v in cmd.items())
+    ans = []
+    w = ans.append
+    w(b'\033_G'), w(cmd.encode('ascii'))
+    if payload:
+        w(b';')
+        w(payload)
+    w(b'\033\\')
+    return b''.join(ans)
+
+
+def write_chunked(**cmd):
+    data = standard_b64encode(cmd.pop('data'))
+    while data:
+        chunk, data = data[:4096], data[4096:]
+        m = 1 if data else 0
+        sys.stdout.buffer.write(serialize_gr_command(payload=chunk, m=m, **cmd))
+        sys.stdout.flush()
+        cmd.clear()
 
 class FigureManagerICat(FigureManagerBase):
 
@@ -31,29 +100,19 @@ class FigureManagerICat(FigureManagerBase):
         return f
 
     def show(self):
-
-        icat = __class__._run('kitty', '+kitten', 'icat')
-
         if os.environ.get('MPLBACKEND_KITTY_SIZING', 'automatic') != 'manual':
 
-            tput = __class__._run('tput')
-
             # gather terminal dimensions
-            rows = int(tput('lines'))
-            px = icat('--print-window-size')
-            px = list(map(int, px.split('x')))
-
-            # account for post-display prompt scrolling
-            # 3 line shift for [\n, <matplotlib.axes…, >>>] after the figure
-            px[1] -= int(3*(px[1]/rows))
+            term_height_px, term_width_px = term_size_px()
 
             # resize figure to terminal size & aspect ratio
-            dpi = self.canvas.figure.dpi
-            self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
+            ipd = 1 / self.canvas.figure.dpi
+            term_width_inch, term_height_inch = term_width_px * ipd, term_height_px * ipd
+            self.canvas.figure.set_size_inches(term_width_inch, term_height_inch)
 
         with BytesIO() as buf:
             self.canvas.figure.savefig(buf, format='png')
-            icat('--align', 'left', output=False, input=buf.getbuffer())
+            write_chunked(a='T', f=100, data=buf.getvalue())
 
 
 class FigureCanvasICat(FigureCanvasAgg):
