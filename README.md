@@ -29,7 +29,7 @@ the following sample code to draw a plot in your terminal.
 
 ```
 $ export MPLBACKEND='module://matplotlib-backend-kitty'
-$ python -i
+$ python
 >>> n = 10000
 >>> df = pd.DataFrame({'x': np.random.randn(n),
                        'y': np.random.randn(n)})
@@ -38,16 +38,16 @@ $ python -i
 ```
 
 If you set your matplotlib to interactive mode via
-`matplotlib.pyplot.ion()` or by running python as
-`python -i`, non-empty figures are drawn on construction
-where possible. This allows you to use pandas' `plot()`
-calls directly, without calling `plt.show()`, and still
+`matplotlib.pyplot.ion()` or by running an interactive python
+shell like `python` or `ipython`, non-empty figures are drawn on
+construction where possible. This allows you to use pandas'
+`plot()` calls directly, without calling `plt.show()`, and still
 enables you to manually construct and `plt.show()`.
 
 If your matplotlib is in non-interactive mode,
 you can construct your figures as usual, and then call
 `plt.show()` to render them to your terminal. This
-works from both a repl and when running scripts.
+works both from scripts and from a repl.
 
 Figures are resized to the size of your terminal by default.
 If you'd rather control the sizing of figures manually,

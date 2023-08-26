@@ -13,7 +13,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 # XXX heuristic for interactive repl
-if sys.flags.interactive:
+if hasattr(sys, 'ps1') or sys.flags.interactive:
     interactive(True)
 
 
